@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>EcoSchool Water AI: greywater dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={darkMode:'class'}</script>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#edf3ef;--surface:#ffffff;--surface2:#f4f8f5;--ink:#12241d;--muted:#576c63;--line:#dce6df;--line2:#c3d2c9;
+  --em:#0a8f63;--em-soft:rgba(10,143,99,.12);--sl:#3d61a3;--sl-soft:rgba(61,97,163,.12);
+  --am:#b97400;--am-soft:rgba(201,130,8,.15);--rd:#cc3535;--rd-soft:rgba(204,53,53,.11);--tl:#0b8585;--water:rgba(61,97,163,.16)}
+:root.dark{--bg:#0c191c;--surface:#122428;--surface2:#172d32;--ink:#e4f0ea;--muted:#92aaa1;--line:#233f45;--line2:#34595f;
+  --em:#2fd39a;--em-soft:rgba(47,211,154,.15);--sl:#86a8e8;--sl-soft:rgba(134,168,232,.17);
+  --am:#f2b33d;--am-soft:rgba(242,179,61,.17);--rd:#ff7070;--rd-soft:rgba(255,112,112,.16);--tl:#43cccc;--water:rgba(134,168,232,.2)}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Instrument Sans',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+#root{min-height:100%}
+.hd{font-family:'Bricolage Grotesque','Instrument Sans',system-ui,sans-serif;font-weight:600;letter-spacing:-.02em}
+.num{font-family:'Bricolage Grotesque','Instrument Sans',system-ui,sans-serif;font-weight:600;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1.05}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px}
+.muted{color:var(--muted)}.c-em{color:var(--em)}.c-am{color:var(--am)}.c-rd{color:var(--rd)}.c-sl{color:var(--sl)}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border-radius:999px;font-size:12.5px;font-weight:600;line-height:1.5;white-space:nowrap}
+.pill.em{background:var(--em-soft);color:var(--em)}.pill.am{background:var(--am-soft);color:var(--am)}
+.pill.rd{background:var(--rd-soft);color:var(--rd)}.pill.sl{background:var(--sl-soft);color:var(--sl)}
+.pill.mut{background:var(--surface2);color:var(--muted);border:1px solid var(--line)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:8px 14px;border-radius:10px;border:1px solid var(--line2);background:var(--surface);color:var(--ink);font-weight:600;font-size:14px;cursor:pointer;transition:background .15s,border-color .15s}
+.btn:hover:not(:disabled){background:var(--surface2)}.btn:disabled{opacity:.5;cursor:not-allowed}
+.nav-btn{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;padding:12px;border-radius:12px;border:1px solid transparent;color:var(--muted);cursor:pointer;transition:background .15s}
+.nav-btn:hover{background:var(--surface2)}
+.nav-btn[aria-current=page]{background:var(--em-soft);color:var(--ink);border-color:var(--line)}
+.nav-btn[aria-current=page] .nav-ico{color:var(--em)}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:12px;background:var(--surface2);border:1px solid var(--line)}
+.seg button{padding:8px 10px;border-radius:9px;font-weight:600;font-size:13.5px;color:var(--muted);cursor:pointer;border:0;background:transparent}
+.seg button[aria-current=page]{background:var(--surface);color:var(--ink);box-shadow:0 0 0 1px var(--line2)}
+.scn{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;padding:13px;border-radius:12px;border:1px solid var(--line);background:var(--surface2);color:var(--ink);cursor:pointer;transition:border-color .2s,background .2s}
+.scn:hover:not(:disabled){border-color:var(--line2);background:var(--surface)}
+.scn:disabled{cursor:default}
+.scn-ico{flex:none;width:34px;height:34px;border-radius:10px;display:grid;place-items:center}
+.scn-ico.rd{background:var(--rd-soft);color:var(--rd)}.scn-ico.sl{background:var(--sl-soft);color:var(--sl)}.scn-ico.am{background:var(--am-soft);color:var(--am)}
+.scn.on.rd{border-color:var(--rd);background:var(--rd-soft)}.scn.on.sl{border-color:var(--sl);background:var(--sl-soft)}.scn.on.am{border-color:var(--am);background:var(--am-soft)}
+.switch{width:40px;height:23px;border-radius:999px;background:var(--line2);position:relative;transition:background .2s;flex:none;border:0;cursor:pointer;padding:0}
+.switch::after{content:'';position:absolute;top:3px;left:3px;width:17px;height:17px;border-radius:50%;background:#fff;transition:transform .2s}
+.switch[aria-checked=true]{background:var(--em)}.switch[aria-checked=true]::after{transform:translateX(17px)}
+:focus-visible{outline:2px solid var(--sl);outline-offset:2px;border-radius:6px}
+input[type=range]{width:100%;accent-color:var(--em);height:22px;cursor:pointer}
+.tbl{width:100%;border-collapse:collapse;min-width:640px}
+.tbl th{font-weight:600;color:var(--muted);text-align:left;font-size:13px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.tbl td{padding:14px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:0}
+.bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden}.bar>i{display:block;height:100%;border-radius:99px;background:var(--em);transition:width .6s ease}
+.row{display:flex;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line)}.row:last-child{border-bottom:0}
+.ico-box{flex:none;width:32px;height:32px;border-radius:9px;background:var(--surface2);border:1px solid var(--line);display:grid;place-items:center;color:var(--muted)}
+/* svg helpers */
+.st-line{stroke:var(--line)}.st-em{stroke:var(--em)}.st-am{stroke:var(--am)}.st-rd{stroke:var(--rd)}.st-sl{stroke:var(--sl)}
+.s-pipe{fill:none;stroke:var(--line2);stroke-width:7;stroke-linecap:round;stroke-linejoin:round}
+.s-flow{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:7 9;animation:flow 1s linear infinite}
+.s-flow.em{stroke:var(--em)}.s-flow.rd{stroke:var(--rd)}.s-flow.sl{stroke:var(--sl)}
+.s-box{fill:var(--surface2);stroke:var(--line2);stroke-width:1.5}
+.s-box.rd{stroke:var(--rd);fill:var(--rd-soft)}
+.s-txt{fill:var(--ink);font:600 13px 'Instrument Sans',sans-serif}
+.s-sub{fill:var(--muted);font:500 11.5px 'Instrument Sans',sans-serif}
+.s-sub.em{fill:var(--em)}.s-sub.am{fill:var(--am)}.s-sub.rd{fill:var(--rd)}.s-sub.sl{fill:var(--sl)}
+.t-mut{fill:var(--muted);font:500 11px 'Instrument Sans',sans-serif}
+.t-ink{fill:var(--ink);font:600 12px 'Instrument Sans',sans-serif}
+.halo{paint-order:stroke;stroke:var(--surface);stroke-width:4px;stroke-linejoin:round}
+.valve-arm{transition:transform .55s cubic-bezier(.4,0,.2,1)}
+@keyframes flow{to{stroke-dashoffset:-16}}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--em);animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 var(--em-soft)}70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.toasts{position:fixed;z-index:50;top:calc(12px + env(safe-area-inset-top,0px));right:12px;left:12px;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+@media(min-width:640px){.toasts{left:auto;width:400px;right:20px}}
+.toast{pointer-events:auto;display:flex;gap:12px;padding:14px;border-radius:14px;background:var(--surface);border:1px solid var(--line2);border-left-width:4px;box-shadow:0 10px 30px rgba(8,20,16,.18);animation:tin .28s ease}
+.toast.rd{border-left-color:var(--rd)}.toast.sl{border-left-color:var(--sl)}.toast.am{border-left-color:var(--am)}.toast.em{border-left-color:var(--em)}
+@keyframes tin{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.s-flow,.dot{animation:none}.toast{animation:none}.valve-arm,.bar>i,.switch,.switch::after{transition:none}}
+.numbox{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line2);background:var(--surface);border-radius:9px;padding:4px 8px;font-weight:600;white-space:nowrap;flex:none}
+.numbox:focus-within{outline:2px solid var(--sl);outline-offset:1px}
+.numbox input{width:64px;background:transparent;border:0;color:inherit;font:inherit;text-align:right;outline:none;-moz-appearance:textfield}
+.numbox input::-webkit-outer-spin-button,.numbox input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.rot{transform:rotate(180deg)}
+.flash{display:inline-block;border-radius:6px;animation:hl 1s ease-out}
+@keyframes hl{from{background:var(--em-soft)}to{background:transparent}}
+@media(prefers-reduced-motion:reduce){.flash{animation:none}}
+.scroll-x{overflow-x:auto;-webkit-overflow-scrolling:touch}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.umd.js"></script>
+<script>
+(function(){
+'use strict';
+var useState=React.useState,useEffect=React.useEffect,useRef=React.useRef,useReducer=React.useReducer;
+var html=htm.bind(React.createElement);
+var clamp=function(v,a,b){return Math.max(a,Math.min(b,v))};
+var eur=function(v,dp){dp=dp||0;return (v<0?'-':'')+'€'+Math.abs(v).toLocaleString('en-US',{minimumFractionDigits:dp,maximumFractionDigits:dp})};
+var reduceMotion=function(){return !!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches)};
+
+/* ---------- configuration: every tunable number lives here ---------- */
+var CONFIG={
+ daysPerMonth:30,            // V_monthly = V_daily x 30
+ targetPaybackMonths:8.0,    // payback target shown on the KPI ring
+ annualTarget:2200,          // annual net savings target (EUR)
+ serviceDays:275,            // days the system has been in service this year
+ lastMonthM3:38.1,           // measured volume last month, for the month-on-month badge
+ wqiSafeMin:80,              // WQI below this = contaminated, valve bypasses to sewer
+ phMin:6.5,phMax:8.5,phNeutral:7.5,phSlope:30,   // P_pH = |pH - 7.5| x 30 outside the safe band
+ ntuLimit:5.0,ntuSlope:12,                        // P_NTU = (NTU - 5.0) x 12 above the limit
+ spikePh:9.2,                // pH forced by the soap / pH spike scenario
+ pumpKwh:1.5,elecPrice:0.30  // rain shut-off saves pumpKwh x elecPrice = EUR 0.45
+};
+var DEFAULTS={vDaily:1.5,price:4.5,capex:1200,opex:25};
+var PARAM_DEFS=[
+ {key:'vDaily',label:'Daily handwashing water volume',sym:['V','daily'],min:0.5,max:5,step:0.1,dp:1,unit:'m³/day',prefix:''},
+ {key:'price',label:'Municipal water price',sym:['P','water'],min:1,max:10,step:0.05,dp:2,unit:'/ m³',prefix:'€'},
+ {key:'capex',label:'Initial CAPEX investment',sym:['C','capex'],min:500,max:3000,step:50,dp:0,unit:'',prefix:'€'},
+ {key:'opex',label:'Monthly OPEX cost',sym:['C','opex'],min:5,max:100,step:1,dp:0,unit:'/ month',prefix:'€'}
+];
+var RISKS=[
+ {id:'bypass',name:'High-alkaline water bypass',risk:'Plant damage',value:300,per:' / year'},
+ {id:'drift',name:'Sensor drift detection',risk:'Premature filter replacement',value:150,per:''},
+ {id:'weather',name:'Weather API predictive shut-off',risk:'Excess pump power usage',value:45,per:' / year'}
+];
+var SCEN={
+ ph:{key:'ph',prot:'bypass',tone:'rd',icon:'flask',title:'Trigger high soap / pH spike (pH = 9.2)',
+   hint:'Sets pH to 9.2, recalculates WQI and flushes the water to the sewer.',okTitle:'AI alert',clear:'pH reading returned to normal.'},
+ rain:{key:'rain',prot:'weather',tone:'sl',icon:'cloud-rain',title:'Simulate rain forecast (85% probability)',
+   hint:'Sets rain to true and disables the irrigation pump.',okTitle:'AI action',clear:'Rain forecast cleared.'},
+ drift:{key:'drift',prot:'drift',tone:'am',icon:'activity',title:'Simulate sensor #2 (NTU) signal drift',
+   hint:'Raises the NTU error flag and switches to calibration mode.',okTitle:'AI flag',clear:'NTU error flag cleared.'}
+};
+function outcome(key,ctx){
+ var f=function(v){return v.toFixed(1)};
+ if(key==='ph'){
+  var w=computeWQI(CONFIG.spikePh,ctx.ntu),v=RISKS[0].value;
+  return{value:v,kwh:0,
+   ok:'AI Alert: pH spiked to '+f(CONFIG.spikePh)+', so WQI fell to '+f(w.wqi)+' (below '+CONFIG.wqiSafeMin+'). Contaminated water blocked and valve set to BYPASS TO SEWER. Loss prevented: '+eur(v)+'.',
+   bad:'Safeguard off: pH spiked to '+f(CONFIG.spikePh)+' and WQI fell to '+f(w.wqi)+', but the bypass is disabled. Contaminated water is reaching storage. Exposure: '+eur(v)+'.'};
+ }
+ if(key==='rain'){
+  var sv=CONFIG.pumpKwh*CONFIG.elecPrice;
+  return{value:sv,kwh:CONFIG.pumpKwh,
+   ok:'AI Action: Rain expected in 2 hours. Irrigation pump disabled, saving '+f(CONFIG.pumpKwh)+' kWh ('+eur(sv,2)+'), added to today\'s saved OPEX.',
+   bad:'Safeguard off: irrigation is running ahead of rain. '+f(CONFIG.pumpKwh)+' kWh ('+eur(sv,2)+') wasted.'};
+ }
+ var c=RISKS[1].value;
+ return{value:c,kwh:0,
+  ok:'AI Flag: NTU sensor #2 error flag set. Calibration mode active, holding the last good reading of '+f(ctx.ntuGood)+' NTU. Filter replacement paused to prevent '+eur(c)+' unnecessary OPEX.',
+  bad:'Safeguard off: NTU sensor #2 is drifting and the controller trusts it. Early filter replacement triggered: '+eur(c)+' unnecessary OPEX.'};
+}
+
+/* ---------- icons (Lucide-style, 24px grid) ---------- */
+var ICONS={
+ droplet:'<path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/>',
+ droplets:'<path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z"/><path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97"/>',
+ sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>',
+ moon:'<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+ 'cloud-rain':'<path d="M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.24"/><path d="M16 14v6M8 14v6M12 16v6"/>',
+ 'cloud-sun':'<path d="M12 2v2M4.9 4.9l1.4 1.4M20 12h2M19.1 4.9l-1.4 1.4M15.9 12.7a4 4 0 0 0-5.9-4.2"/><path d="M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z"/>',
+ alert:'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4M12 17h.01"/>',
+ zap:'<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>',
+ check:'<path d="M20 6 9 17l-5-5"/>',
+ x:'<path d="M18 6 6 18M6 6l12 12"/>',
+ trend:'<path d="M22 7l-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/>',
+ up:'<path d="M7 7h10v10M7 17 17 7"/>',
+ shield:'<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
+ activity:'<path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/>',
+ coins:'<circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/>',
+ reset:'<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>',
+ leaf:'<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>',
+ flask:'<path d="M10 2v7.31M14 9.3V1.99M8.5 2h7"/><path d="M14 9.3a6.5 6.5 0 1 1-4 0"/><path d="M5.52 16h12.96"/>',
+ wrench:'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
+ gauge:'<path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/>',
+ layers:'<path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/>',
+ lamp:'<path d="M12 2v3M4.93 4.93l2.12 2.12M19.07 4.93l-2.12 2.12M2 12h3M19 12h3"/><path d="M8 16a4 4 0 1 1 8 0c0 1.5-1 2-1 3H9c0-1-1-1.5-1-3z"/><path d="M10 22h4"/>',
+ sprout:'<path d="M7 20h10M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/>',
+ gate:'<path d="M12 3v18M5 9h14M5 15h14"/>',
+ cpu:'<rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M15 2v2M15 20v2M2 15h2M2 9h2M20 15h2M20 9h2M9 2v2M9 20v2"/>',
+ sliders:'<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>',
+ chevron:'<path d="m6 9 6 6 6-6"/>',
+ info:'<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>'
+};
+function Icon(p){
+ return html`<svg className=${p.className||''} width=${p.size||18} height=${p.size||18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth=${p.sw||1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" dangerouslySetInnerHTML=${{__html:ICONS[p.name]||''}}></svg>`;
+}
+
+/* ---------- hooks ---------- */
+function useTween(target,ms){
+ ms=ms||800;
+ var s=useState(target),v=s[0],setV=s[1];var cur=useRef(target);
+ useEffect(function(){
+  if(reduceMotion()){cur.current=target;setV(target);return;}
+  var from=cur.current,t0=performance.now(),raf;
+  var step=function(t){var p=Math.min(1,(t-t0)/ms),e=1-Math.pow(1-p,3);cur.current=from+(target-from)*e;setV(cur.current);if(p<1)raf=requestAnimationFrame(step)};
+  raf=requestAnimationFrame(step);
+  return function(){cancelAnimationFrame(raf)};
+ },[target]);
+ return v;
+}
+function useWidth(ref){
+ var s=useState(640),w=s[0],setW=s[1];
+ useEffect(function(){
+  var el=ref.current;if(!el)return;
+  var set=function(){setW(Math.max(260,el.clientWidth||640))};set();
+  if(!window.ResizeObserver)return;
+  var ro=new ResizeObserver(set);ro.observe(el);return function(){ro.disconnect()};
+ },[]);
+ return w;
+}
+
+/* ---------- calculation engine (pure functions, no hardcoded results) ---------- */
+function computeFinance(i){
+ var Vm=i.vDaily*CONFIG.daysPerMonth;      // 1. monthly volume, m3/month
+ var Sg=Vm*i.price;                        // 2. gross monthly savings, EUR/month
+ var Sn=Sg-i.opex;                         // 3. net monthly savings, EUR/month
+ var Sa=Sn*12;                             // 4. annual net savings, EUR/year
+ var T=Sn>0?i.capex/Sn:Infinity;           // 5. payback period, months
+ var roi=(Sa*3-i.capex)/i.capex*100;       // 6. 3-year ROI, %
+ return{Vm:Vm,Sg:Sg,Sn:Sn,Sa:Sa,T:T,roi:roi};
+}
+function computeWQI(ph,ntu){
+ var inRange=ph>=CONFIG.phMin&&ph<=CONFIG.phMax;
+ var pPh=inRange?0:Math.abs(ph-CONFIG.phNeutral)*CONFIG.phSlope;
+ var pNtu=ntu<=CONFIG.ntuLimit?0:(ntu-CONFIG.ntuLimit)*CONFIG.ntuSlope;
+ return{ph:ph,ntu:ntu,inRange:inRange,pPh:pPh,pNtu:pNtu,wqi:Math.max(0,100-pPh-pNtu)};
+}
+function useFinance(i){return React.useMemo(function(){return computeFinance(i)},[i.vDaily,i.price,i.capex,i.opex])}
+function useWqi(ph,ntu){return React.useMemo(function(){return computeWQI(ph,ntu)},[ph,ntu])}
+
+/* ---------- simulated sensor stream ---------- */
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+var rng=mulberry(20260921);
+function gauss(){return Math.sqrt(-2*Math.log(rng()+1e-9))*Math.cos(2*Math.PI*rng())}
+function bump(h,c,w){return Math.exp(-Math.pow((h-c)/w,2))}
+function usage(h){h=((h%24)+24)%24;return Math.min(1,.95*bump(h,8.7,.7)+.7*bump(h,10.4,.6)+.9*bump(h,12.3,.7)+.55*bump(h,14.8,.8))}
+function baseline(h){var u=usage(h);return{ph:7.3+.18*Math.sin((h-6)/24*2*Math.PI)+.3*u+gauss()*.04,ntu:1.7+2.1*u+gauss()*.12,flow:.02+.3*u*(.9+.2*rng()),tds:330+110*u+gauss()*4}}
+var N=96;
+function makeHistory(startH){var a=[];for(var i=0;i<N;i++){var b=baseline(startH+i*.25);a.push({ph:b.ph,ntu:b.ntu,g:b.ntu,tds:b.tds,flow:b.flow,f:0})}return a}
+/* g = last good NTU estimate: held constant while the NTU error flag is raised */
+function nextPoint(last,vh,sim,protect){
+ var b=baseline(vh);
+ var soften=function(prev,target,tol){return prev+(target-prev)*(Math.abs(prev-target)>tol?.5:1)};
+ var ph=sim.ph?CONFIG.spikePh:soften(last.ph,b.ph,.25);
+ var ntu,g,f=0;
+ if(sim.drift){f=1;g=last.g;ntu=clamp(last.ntu*.4+(b.ntu+2.4)*.6+gauss()*.9,.3,8.5)}
+ else{ntu=soften(last.ntu,b.ntu,.25);g=ntu}
+ var tds=soften(last.tds,b.tds+(sim.ph?140:0),25);
+ var used=sim.drift&&protect.drift?g:ntu;
+ var blocked=computeWQI(ph,used).wqi<CONFIG.wqiSafeMin&&protect.bypass;
+ var flow=Math.max(0,soften(last.flow,blocked?.01:b.flow,.08));
+ return{ph:ph,ntu:ntu,g:g,tds:tds,flow:flow,f:f};
+}
+
+/* ---------- scenario state ---------- */
+var INIT={sim:{ph:false,rain:false,drift:false},protect:{bypass:true,drift:true,weather:true},toasts:[],log:[],
+ tally:{avoided:0,missed:0,kwh:0,opexSaved:0},counts:{bypass:{caught:0,missed:0},drift:{caught:0,missed:0},weather:{caught:0,missed:0}}};
+function reducer(s,a){
+ switch(a.type){
+  case 'trigger':{
+   var sc=SCEN[a.key];if(s.sim[a.key])return s;
+   var sim=Object.assign({},s.sim);sim[a.key]=true;
+   var counts=JSON.parse(JSON.stringify(s.counts));counts[sc.prot][a.on?'caught':'missed']++;
+   var t=s.tally;
+   return Object.assign({},s,{sim:sim,counts:counts,
+    tally:{avoided:t.avoided+(a.on?a.value:0),missed:t.missed+(a.on?0:a.value),kwh:t.kwh+(a.on?a.kwh:0),opexSaved:t.opexSaved+(a.on&&a.key==='rain'?a.value:0)},
+    toasts:s.toasts.concat([{id:a.id,tone:a.tone,title:a.title,msg:a.msg}]),
+    log:[{id:a.id,time:a.time,tone:a.tone,msg:a.msg}].concat(s.log).slice(0,30)});
+  }
+  case 'clearOne':{
+   if(!s.sim[a.key])return s;
+   var sim2=Object.assign({},s.sim);sim2[a.key]=false;
+   return Object.assign({},s,{sim:sim2,log:[{id:a.id,time:a.time,tone:'em',msg:SCEN[a.key].clear}].concat(s.log).slice(0,30)});
+  }
+  case 'reset':{
+   if(!Object.values(s.sim).some(Boolean))return s;
+   return Object.assign({},s,{sim:{ph:false,rain:false,drift:false},log:[{id:a.id,time:a.time,tone:'em',msg:'Controller returned to normal operation.'}].concat(s.log).slice(0,30)});
+  }
+  case 'protect':{var p=Object.assign({},s.protect);p[a.id]=!p[a.id];return Object.assign({},s,{protect:p})}
+  case 'dismiss':return Object.assign({},s,{toasts:s.toasts.filter(function(t){return t.id!==a.id})});
+  case 'clear':return Object.assign({},s,{log:[],tally:INIT.tally,counts:INIT.counts});
+  default:return s;
+ }
+}
+/* everything the UI shows about the plant is derived from the live WQI, not from scenario flags */
+function derive(sim,protect,wq,live){
+ var safe=wq.wqi>=CONFIG.wqiSafeMin;
+ var blocked=!safe&&protect.bypass,leak=!safe&&!protect.bypass;
+ var calib=sim.drift;
+ var pump;
+ if(sim.rain&&protect.weather)pump={state:'AUTO-DISABLED',note:'Rain predicted, cycle canceled',tone:'sl',on:false};
+ else if(sim.rain)pump={state:'ON',note:'Running ahead of forecast rain',tone:'am',on:true};
+ else pump={state:'OFF',note:'Idle, next cycle 18:00',tone:'mut',on:false};
+ var stage1=calib?(protect.drift?{t:'Replacement paused',tone:'am'}:{t:'Replacement queued (false alarm)',tone:'rd'}):{t:'Healthy',tone:'em'};
+ var mode=!safe?(blocked?['Bypass active','rd']:['Contaminated water in storage','rd']):
+  calib?(protect.drift?['CALIBRATION MODE','am']:['Filter replaced on bad data','rd']):
+  sim.rain?(protect.weather?['Irrigation auto-disabled','sl']:['Irrigating into rain','am']):['Normal operation','em'];
+ var weather=sim.rain?{icon:'cloud-rain',label:'Rain likely',detail:'85% chance of rain in the next 2 hours',tone:'sl'}:
+  {icon:'cloud-sun',label:'Partly cloudy',detail:'18% chance of rain over the next 6 hours',tone:'em'};
+ return{safe:safe,blocked:blocked,leak:leak,calib:calib,fallback:calib&&protect.drift,
+  status:safe?'SAFE / RECYCLING ACTIVE':'ALERT / WATER CONTAMINATED',statusTone:safe?'em':'rd',
+  valve:blocked?'BYPASS TO SEWER':'OPEN',riskAvoided:blocked?RISKS[0].value:0,riskExposed:leak?RISKS[0].value:0,
+  pump:pump,stage1:stage1,mode:mode,weather:weather};
+}
+/* ---------- small visual primitives ---------- */
+function Ring(p){
+ var size=p.size||84,stroke=p.stroke||8,r=(size-stroke)/2,c=2*Math.PI*r;
+ return html`<div style=${{position:'relative',width:size,height:size,flex:'none'}}>
+  <svg width=${size} height=${size} viewBox=${'0 0 '+size+' '+size} style=${{transform:'rotate(-90deg)'}} aria-hidden="true">
+   <circle cx=${size/2} cy=${size/2} r=${r} fill="none" strokeWidth=${stroke} className="st-line"/>
+   <circle cx=${size/2} cy=${size/2} r=${r} fill="none" strokeWidth=${stroke} strokeLinecap="round" strokeDasharray=${c} strokeDashoffset=${c*(1-clamp(p.value,0,1))} className=${'st-'+p.tone} style=${{transition:'stroke-dashoffset .8s ease'}}/>
+  </svg>
+  <div style=${{position:'absolute',inset:0,display:'grid',placeItems:'center'}}>${p.children}</div>
+ </div>`;
+}
+function Gauge(p){
+ var L=Math.PI*52,off=L*(1-clamp(p.value,0,100)/100);
+ return html`<div style=${{position:'relative',width:132,height:78,flex:'none'}}>
+  <svg width="132" height="78" viewBox="0 0 120 70" aria-hidden="true">
+   <path d="M8 62A52 52 0 0 1 112 62" fill="none" strokeWidth="9" strokeLinecap="round" className="st-line"/>
+   <path d="M8 62A52 52 0 0 1 112 62" fill="none" strokeWidth="9" strokeLinecap="round" strokeDasharray=${L} strokeDashoffset=${off} className=${'st-'+p.tone}/>
+  </svg>
+  <div style=${{position:'absolute',left:0,right:0,bottom:0,textAlign:'center'}}><span className="num" style=${{fontSize:30}}>${p.value.toFixed(1)}</span><span className="muted" style=${{fontSize:13}}> / 100</span></div>
+ </div>`;
+}
+
+/* ---------- KPI strip (every number below is computed from the engine) ---------- */
+function Flash(p){return html`<span key=${p.v} className="flash">${p.children}</span>`}
+function Kpis(p){
+ var d=p.d,fin=p.fin,wq=p.wq,st=p.st,inputs=p.inputs;
+ var wqi=useTween(wq.wqi);
+ var ytd=fin.Sn*CONFIG.serviceDays/CONFIG.daysPerMonth+st.tally.opexSaved;
+ var pct=clamp(ytd/CONFIG.annualTarget,0,1);
+ var recycled=inputs.vDaily*CONFIG.serviceDays;
+ var mom=(fin.Vm/CONFIG.lastMonthM3-1)*100;
+ var T=fin.T,finite=isFinite(T),ahead=finite&&T<=CONFIG.targetPaybackMonths;
+ var ringVal=finite?clamp(T/CONFIG.targetPaybackMonths,0,1):1;
+ var num=function(v,dp){return v.toLocaleString('en-US',{minimumFractionDigits:dp,maximumFractionDigits:dp})};
+ return html`<section aria-label="Key metrics" className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mt-5">
+  <div className="card p-5">
+   <div className="flex items-center gap-2 muted text-[14px] font-semibold"><${Icon} name="coins" size=${17}/> YTD cost savings</div>
+   <div className="num mt-3" style=${{fontSize:38}}><${Flash} v=${Math.round(ytd)}>${eur(ytd)}<//></div>
+   <div className="bar mt-4" role="progressbar" aria-valuemin="0" aria-valuemax=${CONFIG.annualTarget} aria-valuenow=${Math.round(clamp(ytd,0,CONFIG.annualTarget))} aria-label="Progress toward annual savings target"><i style=${{width:(pct*100)+'%'}}></i></div>
+   <div className="flex justify-between gap-2 mt-2 text-[13px] muted"><span>${Math.round(pct*100)}% of ${eur(CONFIG.annualTarget)} target</span><span>${ytd>=CONFIG.annualTarget?'Target reached':eur(CONFIG.annualTarget-ytd)+' to go'}</span></div>
+   <div className="mt-2 text-[13px] muted">Projected full year: <b className=${fin.Sa>=CONFIG.annualTarget?'c-em':''}>${eur(fin.Sa)}</b>${st.tally.opexSaved>0?html`<span className="c-sl"> · includes +${eur(st.tally.opexSaved,2)} saved OPEX today</span>`:''}</div>
+  </div>
+  <div className="card p-5">
+   <div className="flex items-center gap-2 muted text-[14px] font-semibold"><${Icon} name="droplets" size=${17}/> Total water recycled</div>
+   <div className="num mt-3" style=${{fontSize:38}}><${Flash} v=${Math.round(recycled)}>${num(recycled,0)}<//> <span style=${{fontSize:22}} className="muted">m³</span></div>
+   <div className="mt-4"><span className=${'pill '+(mom>=0?'em':'am')}><${Icon} name="up" size=${14} sw=${2.4}/> ${mom>=0?'+':''}${mom.toFixed(0)}% vs last month</span></div>
+   <div className="mt-2 text-[13px] muted">${num(fin.Vm,1)} m³ per month at ${inputs.vDaily.toFixed(1)} m³ per day.</div>
+  </div>
+  <div className="card p-5">
+   <div className="flex items-center gap-2 muted text-[14px] font-semibold"><${Icon} name="shield" size=${17}/> Water quality index</div>
+   <div className="mt-3"><${Gauge} value=${wqi} tone=${d.statusTone}/></div>
+   <div className="mt-3 flex flex-wrap gap-2"><span className=${'pill '+d.statusTone}>${d.status}</span>${d.calib&&html`<span className="pill am">CALIBRATION MODE</span>`}</div>
+   <div className="mt-2 text-[13px] muted">pH ${wq.ph.toFixed(2)} · turbidity ${wq.ntu.toFixed(1)} NTU${d.blocked?html`<b className="c-em"> · risk avoided ${eur(d.riskAvoided)}</b>`:''}${d.leak?html`<b className="c-rd"> · exposure ${eur(d.riskExposed)}</b>`:''}</div>
+  </div>
+  <div className="card p-5">
+   <div className="flex items-center gap-2 muted text-[14px] font-semibold"><${Icon} name="trend" size=${17}/> Payback period progress</div>
+   <div className="flex items-center gap-4 mt-3">
+    <${Ring} value=${ringVal} tone=${ahead?'em':'am'} size=${88} stroke=${9}>
+     <span className="num" style=${{fontSize:24}}>${finite?T.toFixed(1):'n/a'}</span>
+    <//>
+    <div>
+     <div className="num" style=${{fontSize:24}}><${Flash} v=${finite?T.toFixed(1):'x'}>${finite?T.toFixed(1):'Never'}<//> <span className="muted" style=${{fontSize:16}}>/ ${CONFIG.targetPaybackMonths.toFixed(1)} months</span></div>
+     <div className=${'text-[13px] mt-1 '+(ahead?'c-em':'c-am')}>${!finite?'Savings do not cover OPEX':ahead?(CONFIG.targetPaybackMonths-T).toFixed(1)+' months ahead of target':(T-CONFIG.targetPaybackMonths).toFixed(1)+' months behind target'}</div>
+    </div>
+   </div>
+   <div className="mt-3 text-[13px] muted">3-year ROI: <b className=${fin.roi>=0?'c-em':'c-rd'}>${fin.roi>=0?'+':''}${num(fin.roi,1)}%</b></div>
+  </div>
+ </section>`;
+}
+
+/* ---------- treatment loop schematic ---------- */
+function Tank(p){
+ var inner=p.h-14,lh=inner*p.level;
+ return html`<g>
+  <text className="s-txt" x=${p.x+p.w/2} y=${p.y-12} textAnchor="middle">${p.name}</text>
+  <rect className=${'s-box '+(p.bad?'rd':'')} x=${p.x} y=${p.y} width=${p.w} height=${p.h} rx="12"/>
+  <rect x=${p.x+7} y=${p.y+7+inner-lh} width=${p.w-14} height=${lh} rx="7" style=${{fill:p.bad?'var(--rd)':'var(--water)',opacity:p.bad?.35:1,transition:'fill .5s'}}/>
+  <text className="s-txt" x=${p.x+p.w/2} y=${p.y+p.h/2+5} textAnchor="middle">${p.pct}</text>
+  ${p.sub&&html`<text className="s-sub" x=${p.x+p.w/2} y=${p.y+p.h+18} textAnchor="middle">${p.sub}</text>`}
+ </g>`;
+}
+function Stage(p){
+ var x0=176+150*p.i;
+ return html`<g transform=${'translate('+x0+' 104)'}>
+  <rect className="s-box" width="100" height="92" rx="12"/>
+  ${p.children}
+  <text className="s-txt" x="50" y="114" textAnchor="middle">${p.name}</text>
+  <text className=${'s-sub '+p.tone} x="50" y="130" textAnchor="middle">${p.status}</text>
+ </g>`;
+}
+function Schematic(p){
+ var d=p.d,lv=p.live,blocked=d.blocked,leak=d.leak;
+ var ph=lv.ph,ntu=lv.ntu;
+ var phBad=ph<6.5||ph>8.5;
+ var flowClass=leak?'rd':'em';
+ var drift=p.sim.drift;
+ var pipes=['M126 150H176','M276 150H326','M426 150H476','M576 150H704'];
+ var gravel=[[18,74,4],[34,77,4.5],[52,73,4],[70,77,4.5],[84,73,4],[26,68,3],[62,69,3.5]];
+ return html`<svg viewBox="0 0 1040 330" style=${{width:'100%',minWidth:760,height:'auto'}} role="img" aria-label=${'Greywater treatment loop. Valve is '+d.valve.toLowerCase()+'. '+d.mode[0]+'.'}>
+  ${pipes.map(function(dd){return html`<path key=${dd} className="s-pipe" d=${dd}/>`})}
+  <path className="s-pipe" d="M736 150H810"/>
+  <path className="s-pipe" d="M720 130V38H752"/>
+  <path className="s-pipe" d="M865 210V238M865 266V296M780 296H1010"/>
+  ${pipes.map(function(dd){return html`<path key=${'f'+dd} className=${'s-flow '+(leak?'rd':'em')} d=${dd}/>`})}
+  ${!blocked&&html`<path className=${'s-flow '+flowClass} d="M736 150H810"/>`}
+  ${blocked&&html`<path className="s-flow rd" d="M720 130V38H752"/>`}
+  ${d.pump.on&&html`<path className="s-flow sl" d="M865 210V238M865 266V296M780 296H1010"/>`}
+
+  <${Tank} x=${16} y=${90} w=${110} h=${120} level=${.62} pct="62%" name="Collection tank" sub="Sinks and handwashing"/>
+  <${Tank} x=${810} y=${90} w=${110} h=${120} level=${.78} pct="78%" name="Storage tank" bad=${leak}/>
+
+  <${Stage} i=${0} name="Gravel & sand filter" status=${d.stage1.t} tone=${d.stage1.tone}>
+   <rect x="8" y="10" width="84" height="34" rx="6" style=${{fill:'var(--water)'}}/>
+   <rect x="8" y="46" width="84" height="18" style=${{fill:'var(--am-soft)'}}/>
+   <rect x="8" y="66" width="84" height="18" rx="4" style=${{fill:'var(--line)'}}/>
+   ${gravel.map(function(g,i){return html`<circle key=${i} cx=${g[0]} cy=${g[1]} r=${g[2]} style=${{fill:'var(--line2)'}}/>`})}
+  <//>
+  <${Stage} i=${1} name="Phytoremediation" status="Optimal" tone="em">
+   <rect x="8" y="68" width="84" height="16" rx="4" style=${{fill:'var(--line)'}}/>
+   ${[28,50,72].map(function(cx,i){var h=[30,40,26][i];return html`<g key=${cx}>
+    <path d=${'M'+cx+' 68V'+(68-h)} className="st-em" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+    <ellipse cx=${cx-9} cy=${68-h+8} rx="9" ry="4.5" transform=${'rotate(-30 '+(cx-9)+' '+(68-h+8)+')'} style=${{fill:'var(--em)',opacity:.75}}/>
+    <ellipse cx=${cx+9} cy=${68-h+2} rx="9" ry="4.5" transform=${'rotate(30 '+(cx+9)+' '+(68-h+2)+')'} style=${{fill:'var(--em)',opacity:.9}}/>
+   </g>`})}
+  <//>
+  <${Stage} i=${2} name="UV disinfection" status="Active, 35 W, lamp 88%" tone="em">
+   <circle cx="50" cy="46" r="34" style=${{fill:'var(--sl)',opacity:.1}}/>
+   <circle cx="50" cy="46" r="22" style=${{fill:'var(--sl)',opacity:.14}}/>
+   <rect x="41" y="14" width="18" height="64" rx="9" style=${{fill:'var(--sl)'}}/>
+   <rect x="46" y="20" width="4" height="52" rx="2" style=${{fill:'#fff',opacity:.55}}/>
+  <//>
+
+  ${[[151,'Flow',lv.flow.toFixed(2)+' m³/h','em'],[610,'pH',ph.toFixed(1),phBad?'rd':'em'],[650,'NTU',ntu.toFixed(1),drift?'am':'em']].map(function(s){
+   return html`<g key=${s[1]}>
+    <circle cx=${s[0]} cy="150" r="7.5" className="s-box" style=${{fill:'var(--surface)',stroke:'var(--'+({em:'em',rd:'rd',am:'am'})[s[3]]+')',strokeWidth:2.5}}/>
+    <text className="s-sub" x=${s[0]} y="130" textAnchor="middle">${s[1]}</text>
+    <text className=${'s-txt'} x=${s[0]} y="178" textAnchor="middle" style=${{fill:'var(--'+s[3]+')'}}>${s[2]}</text>
+   </g>`})}
+
+  <g transform="translate(720 150)">
+   <circle r="21" className=${'s-box '+(blocked?'rd':'')}/>
+   <g className="valve-arm" style=${{transform:'rotate('+(blocked?-90:0)+'deg)'}}>
+    <path d="M-11 0H11M4 -7L11 0L4 7" fill="none" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className=${blocked?'st-rd':'st-em'}/>
+   </g>
+   <text className="s-txt" x="0" y="46" textAnchor="middle">Solenoid valve</text>
+   <text className=${'s-sub '+(blocked?'rd':'em')} x="0" y="62" textAnchor="middle">${blocked?'Bypass, to sewer':'Open, to storage'}</text>
+  </g>
+
+  <rect className=${'s-box '+(blocked?'rd':'')} x="752" y="14" width="128" height="48" rx="10"/>
+  <text className="s-txt" x="816" y="35" textAnchor="middle">City sewer</text>
+  <text className=${'s-sub '+(blocked?'rd':'')} x="816" y="51" textAnchor="middle">${blocked?'Receiving flush':'No flow'}</text>
+
+  <circle cx="865" cy="252" r="14" className=${'s-box'} style=${{stroke:d.pump.on?'var(--sl)':'var(--line2)',strokeWidth:2}}/>
+  <path d="M859 246L871 252L859 258Z" style=${{fill:d.pump.on?'var(--sl)':'var(--line2)'}}/>
+  <text className="s-txt" x="842" y="248" textAnchor="end">Drip pump</text>
+  <text className=${'s-sub '+(d.pump.tone==='mut'?'':d.pump.tone)} x="842" y="264" textAnchor="end">${d.pump.state}</text>
+  ${[800,840,880,920,960,1000].map(function(x){return html`<circle key=${x} cx=${x} cy="296" r="3.5" style=${{fill:d.pump.on?'var(--sl)':'var(--line2)'}}/>`})}
+  <path d="M770 314H1010" strokeDasharray="2 6" strokeLinecap="round" className="st-line" strokeWidth="3" fill="none"/>
+  <text className="s-sub" x="1010" y="328" textAnchor="end">Subsurface drip irrigation</text>
+ </svg>`;
+}
+
+/* ---------- time series ---------- */
+function TimeSeries(p){
+ var ref=useRef(null),w=useWidth(ref),hs=useState(null),hi=hs[0],setHi=hs[1];
+ var H=128,pl=38,pr=8,pt=8,pb=20,data=p.data,n=data.length,d0=p.domain[0],d1=p.domain[1];
+ var X=function(i){return pl+i/(n-1)*(w-pl-pr)};
+ var Y=function(v){return pt+(1-(clamp(v,d0,d1)-d0)/(d1-d0))*(H-pt-pb)};
+ var vals=data.map(p.pick);
+ var tone=function(i){return p.toneOf?p.toneOf(data[i],vals[i]):'ok'};
+ var rank={ok:0,warn:1,bad:2},runs=[],cur=null;
+ for(var i=1;i<n;i++){var a=tone(i-1),b=tone(i),t=rank[a]>=rank[b]?a:b;
+  if(cur&&cur.t===t)cur.p.push(i);else{cur={t:t,p:[i-1,i]};runs.push(cur)}}
+ var path=function(ix){return ix.map(function(i,k){return (k?'L':'M')+X(i).toFixed(1)+' '+Y(vals[i]).toFixed(1)}).join(' ')};
+ var all=vals.map(function(_,i){return i});
+ var area=path(all)+' L'+X(n-1).toFixed(1)+' '+(H-pb)+' L'+X(0).toFixed(1)+' '+(H-pb)+' Z';
+ var idx=hi==null?n-1:hi,v=vals[idx],tn=tone(idx),st=p.state(v,tn);
+ var gid='ts'+p.title.replace(/\W/g,'');
+ var mins=(n-1-idx)*15,ago=idx===n-1?'Now':(Math.floor(mins/60)+'h '+(mins%60)+'m ago');
+ var col={ok:p.color,warn:'var(--am)',bad:'var(--rd)'};
+ var onMove=function(e){var r=e.currentTarget.getBoundingClientRect();var px=(e.clientX-r.left)/r.width*w;setHi(clamp(Math.round((px-pl)/(w-pl-pr)*(n-1)),0,n-1))};
+ return html`<div>
+  <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+   <div><span className="font-semibold">${p.title}</span> <span className="muted text-[13px]">${p.sensor}</span></div>
+   <div className="flex items-center gap-2"><span className="muted text-[13px]">${ago}</span><span className="num" style=${{fontSize:20}}>${v.toFixed(p.dp)} <span className="muted" style=${{fontSize:13}}>${p.unit}</span></span><span className=${'pill '+st[1]}>${st[0]}</span></div>
+  </div>
+  <div ref=${ref} style=${{width:'100%',marginTop:6}}>
+   <svg width=${w} height=${H} style=${{display:'block',touchAction:'pan-y'}} role="img" aria-label=${p.title+' over the last 24 hours. Latest '+vals[n-1].toFixed(p.dp)+' '+p.unit}>
+    <defs><linearGradient id=${gid} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor=${p.color} stopOpacity=".2"/><stop offset="1" stopColor=${p.color} stopOpacity="0"/></linearGradient></defs>
+    ${p.band&&html`<rect x=${pl} y=${Y(p.band.to)} width=${w-pl-pr} height=${Y(p.band.from)-Y(p.band.to)} style=${{fill:'var(--em-soft)'}}/>`}
+    ${p.ticks.map(function(t){return html`<g key=${t}><line x1=${pl} x2=${w-pr} y1=${Y(t)} y2=${Y(t)} className="st-line" strokeWidth="1"/><text className="t-mut" x=${pl-6} y=${Y(t)+4} textAnchor="end">${t}</text></g>`})}
+    ${p.band&&html`<text className="t-mut" x=${w-pr-4} y=${Y(p.band.to)+13} textAnchor="end">${p.band.label}</text>`}
+    ${p.limit&&html`<g><line x1=${pl} x2=${w-pr} y1=${Y(p.limit.v)} y2=${Y(p.limit.v)} className="st-am" strokeWidth="1.5" strokeDasharray="5 4"/><text className="t-mut" x=${w-pr-4} y=${Y(p.limit.v)-5} textAnchor="end">${p.limit.label}</text></g>`}
+    <path d=${area} fill=${'url(#'+gid+')'}/>
+    ${runs.map(function(r,k){return html`<path key=${k} d=${path(r.p)} fill="none" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" style=${{stroke:col[r.t]}}/>`})}
+    ${['-24h','-18h','-12h','-6h','now'].map(function(l,k){return html`<text key=${l} className="t-mut" x=${pl+k/4*(w-pl-pr)} y=${H-5} textAnchor=${k===0?'start':k===4?'end':'middle'}>${l}</text>`})}
+    ${hi!=null&&html`<g><line x1=${X(idx)} x2=${X(idx)} y1=${pt} y2=${H-pb} className="st-line" strokeWidth="1.5" style=${{stroke:'var(--muted)'}}/><circle cx=${X(idx)} cy=${Y(v)} r="4.5" style=${{fill:col[tn],stroke:'var(--surface)',strokeWidth:2}}/></g>`}
+    <rect x=${pl} y="0" width=${w-pl-pr} height=${H} fill="transparent" onPointerMove=${onMove} onPointerDown=${onMove} onPointerLeave=${function(){setHi(null)}}/>
+   </svg>
+  </div>
+ </div>`;
+}
+function WaterQuality(p){
+ var s=p.series,sim=p.sim;
+ return html`<section className="card p-5">
+  <div className="flex flex-wrap items-center justify-between gap-2">
+   <h2 className="hd text-[19px]">Water quality, last 24 hours</h2>
+   <span className="muted text-[13px]">Hover or touch a chart to read past values</span>
+  </div>
+  <div className="mt-4 flex flex-col gap-5">
+   <${TimeSeries} title="pH" sensor="Sensor #1" unit="pH" data=${s} pick=${function(q){return q.ph}} domain=${[6,10]} ticks=${[6,7,8,9,10]} color="var(--sl)" dp=${2}
+     band=${{from:6.5,to:8.5,label:'Safe 6.5 to 8.5'}}
+     toneOf=${function(q,v){return v<6.5||v>8.5?'bad':'ok'}}
+     state=${function(v,t){return t==='bad'?['Out of safe range','rd']:['In safe range','em']}}/>
+   <div style=${{borderTop:'1px solid var(--line)'}}></div>
+   <${TimeSeries} title="Turbidity" sensor="Sensor #2" unit="NTU" data=${s} pick=${function(q){return q.ntu}} domain=${[0,8]} ticks=${[0,2,4,6,8]} color="var(--em)" dp=${1}
+     limit=${{v:5,label:'Limit 5.0 NTU'}}
+     toneOf=${function(q,v){return q.f?'warn':v>5?'bad':'ok'}}
+     state=${function(v,t){return t==='warn'?['Calibration needed','am']:t==='bad'?['Above limit','rd']:['Within limit','em']}}/>
+   <div style=${{borderTop:'1px solid var(--line)'}}></div>
+   <${TimeSeries} title="Flow rate" sensor="Collection tank to storage tank" unit="m³/h" data=${s} pick=${function(q){return q.flow}} domain=${[0,.4]} ticks=${[0,.1,.2,.3,.4]} color="var(--tl)" dp=${2}
+     state=${function(v){return v<.03?(p.blocked?['Diverted to sewer','rd']:['Idle','mut']):['Flowing','em']}}/>
+  </div>
+ </section>`;
+}
+
+/* ---------- hardware + weather ---------- */
+function HwRow(p){
+ return html`<div className="row">
+  <div className="ico-box"><${Icon} name=${p.icon} size=${17}/></div>
+  <div className="flex-1 min-w-0"><div className="font-semibold text-[14.5px] leading-tight">${p.name}</div><div className="muted text-[13px]">${p.detail}</div>${p.extra}</div>
+  <span className=${'pill '+p.tone}>${p.status}</span>
+ </div>`;
+}
+function Hardware(p){
+ var d=p.d,lv=p.live,sim=p.sim;
+ var phBad=lv.ph<CONFIG.phMin||lv.ph>CONFIG.phMax;
+ return html`<section className="card p-5">
+  <h2 className="hd text-[19px]">Hardware and valve status</h2>
+  <div className="mt-2">
+   <${HwRow} icon="layers" name="Stage 1: gravel and sand filter" detail="Differential pressure 0.18 bar, normal" status=${d.stage1.t==='Healthy'?'Healthy':d.stage1.t.indexOf('paused')>-1?'Paused':'Queued'} tone=${d.stage1.tone}/>
+   <${HwRow} icon="sprout" name="Stage 2: phytoremediation unit" detail="Plant uptake 92%" status="Optimal" tone="em"/>
+   <${HwRow} icon="lamp" name="Stage 3: UV disinfection lamp" detail="Active, 35 W, lamp life 88%" status="Active" tone="em"
+     extra=${html`<div className="bar mt-2" style=${{height:6}}><i style=${{width:'88%'}}></i></div>`}/>
+   <${HwRow} icon="gauge" name="pH sensor #1" detail=${lv.ph.toFixed(2)+' pH'} status=${phBad?'Out of range':'Reading OK'} tone=${phBad?'rd':'em'}/>
+   <${HwRow} icon="activity" name="Turbidity sensor #2" detail=${sim.drift?'Raw '+lv.ntu.toFixed(1)+' NTU, '+(d.fallback?'using last good '+lv.g.toFixed(1)+' NTU':'controller trusts the raw value'):lv.ntu.toFixed(1)+' NTU'} status=${sim.drift?'Calibration needed':'Reading OK'} tone=${sim.drift?'am':'em'}/>
+   <${HwRow} icon="droplets" name="Flow sensor #3" detail=${lv.flow.toFixed(2)+' m³/h to storage'} status=${lv.flow<.03?'Low flow':'Reading OK'} tone=${lv.flow<.03?'mut':'em'}/>
+   <${HwRow} icon="flask" name="TDS sensor #4" detail=${Math.round(lv.tds)+' mg/L, logged, not scored in WQI'} status="Reading OK" tone="em"/>
+   <${HwRow} icon="gate" name="Solenoid valve" detail=${d.blocked?'Flushing to city sewer':d.leak?'Directing contaminated water to storage':'Directing water to storage tank'} status=${d.valve} tone=${d.blocked?'rd':d.leak?'am':'em'}/>
+   <${HwRow} icon="zap" name="Subsurface drip pump" detail=${d.pump.note} status=${d.pump.state} tone=${d.pump.tone}/>
+  </div>
+ </section>`;
+}
+function Weather(p){
+ var w=p.d.weather;
+ return html`<section className="card p-5 flex items-center gap-4">
+  <div className=${'scn-ico '+(w.tone==='sl'?'sl':'')} style=${{width:52,height:52,borderRadius:14,background:w.tone==='sl'?'var(--sl-soft)':'var(--em-soft)',color:w.tone==='sl'?'var(--sl)':'var(--em)'}}><${Icon} name=${w.icon} size=${28}/></div>
+  <div><div className="muted text-[13px]">Weather forecast</div><div className="hd text-[20px]">${w.label}</div><div className="text-[13.5px] muted">${w.detail}</div></div>
+ </section>`;
+}
+
+/* ---------- AI control center ---------- */
+function Simulator(p){
+ var st=p.st,dispatch=p.dispatch,active=Object.values(st.sim).some(Boolean);
+ var uid=function(){return Date.now()+Math.random()};
+ var now=function(){return new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})};
+ var t=st.tally;
+ var press=function(k){
+  var sc=SCEN[k];
+  if(st.sim[k]){dispatch({type:'clearOne',key:k,id:uid(),time:now()});return}
+  var on=st.protect[sc.prot],o=outcome(k,{ntu:p.ntuUsed,ntuGood:p.live.g});
+  dispatch({type:'trigger',key:k,id:uid(),time:now(),on:on,value:o.value,kwh:o.kwh,title:on?sc.okTitle:'Safeguard off',tone:on?sc.tone:'rd',msg:on?o.ok:o.bad});
+ };
+ return html`<section className="card p-5">
+  <div className="flex items-start gap-3">
+   <div className="ico-box" style=${{color:'var(--em)'}}><${Icon} name="cpu" size=${18}/></div>
+   <div><h2 className="hd text-[19px]">AI control center</h2><p className="muted text-[13.5px]">Trigger a scenario and watch the formulas react. Click an active scenario to clear it.</p></div>
+  </div>
+  <div className="mt-4 flex flex-col gap-3">
+   ${Object.keys(SCEN).map(function(k){
+    var sc=SCEN[k],on=st.sim[k],prot=st.protect[sc.prot];
+    return html`<button key=${k} className=${'scn '+sc.tone+(on?' on':'')} aria-pressed=${on} onClick=${function(){press(k)}}>
+     <span className=${'scn-ico '+sc.tone}><${Icon} name=${sc.icon} size=${18}/></span>
+     <span className="flex-1">
+      <span className="block font-semibold text-[14.5px] leading-snug">${sc.title}</span>
+      <span className="block muted text-[13px] mt-0.5">${sc.hint}</span>
+      ${!prot&&html`<span className="block c-am text-[12.5px] mt-1 font-semibold">Safeguard is off, so this scenario will not be blocked.</span>`}
+     </span>
+     ${on&&html`<span className=${'pill '+sc.tone}><${Icon} name="check" size=${13} sw=${2.6}/> Active</span>`}
+    </button>`})}
+  </div>
+  <button className="btn mt-3 w-full" disabled=${!active} onClick=${function(){dispatch({type:'reset',id:uid(),time:now()})}}><${Icon} name="reset" size=${16}/> Return to normal operation</button>
+
+  <div className="mt-5 grid grid-cols-2 gap-3">
+   <div style=${{background:'var(--surface2)',border:'1px solid var(--line)',borderRadius:12,padding:12}}>
+    <div className="muted text-[12.5px]">Losses avoided this session</div>
+    <div className="num c-em" style=${{fontSize:24}}>${eur(t.avoided,t.avoided%1?2:0)}</div>
+    <div className="muted text-[12.5px]">${t.kwh.toFixed(1)} kWh not used</div>
+   </div>
+   <div style=${{background:'var(--surface2)',border:'1px solid var(--line)',borderRadius:12,padding:12}}>
+    <div className="muted text-[12.5px]">Missed, safeguard off</div>
+    <div className=${'num '+(t.missed>0?'c-rd':'')} style=${{fontSize:24}}>${eur(t.missed,t.missed%1?2:0)}</div>
+    <div className="muted text-[12.5px]">Toggle safeguards in the risk table</div>
+   </div>
+  </div>
+
+  <div className="mt-5 flex items-center justify-between"><h3 className="font-semibold text-[14.5px]">Activity log</h3>${st.log.length>0&&html`<button className="muted text-[13px] underline" style=${{background:'none',border:0,cursor:'pointer'}} onClick=${function(){dispatch({type:'clear'})}}>Clear log and tally</button>`}</div>
+  <div className="mt-2" style=${{maxHeight:190,overflowY:'auto'}}>
+   ${st.log.length===0?html`<p className="muted text-[13.5px]">No events yet. Trigger a scenario to see what the AI decides.</p>`:
+    st.log.map(function(e){return html`<div key=${e.id} className="text-[13.5px] py-2" style=${{borderLeft:'3px solid var(--'+(e.tone==='mut'?'line2':e.tone)+')',paddingLeft:10,marginBottom:6}}><span className="muted">${e.time}</span><div>${e.msg}</div></div>`})}
+  </div>
+ </section>`;
+}
+
+/* ---------- parameter control panel ---------- */
+var Sym=function(a,b){return html`<span>${a}<sub>${b}</sub></span>`};
+function NumInput(p){
+ var s=useState(p.value.toFixed(p.dp)),txt=s[0],setTxt=s[1],foc=useRef(false);
+ useEffect(function(){if(!foc.current)setTxt(p.value.toFixed(p.dp))},[p.value]);
+ return html`<label className="numbox">${p.prefix&&html`<span className="muted">${p.prefix}</span>`}
+  <input type="number" inputMode="decimal" id=${p.id} aria-label=${p.label} min=${p.min} max=${p.max} step=${p.step} value=${txt}
+   onFocus=${function(){foc.current=true}}
+   onBlur=${function(){foc.current=false;var n=parseFloat(txt);n=isFinite(n)?clamp(n,p.min,p.max):p.value;p.onCommit(n);setTxt(n.toFixed(p.dp))}}
+   onChange=${function(e){setTxt(e.target.value);var n=parseFloat(e.target.value);if(isFinite(n)&&n>=p.min&&n<=p.max)p.onCommit(n)}}/>
+  ${p.unit&&html`<span className="muted text-[13px]">${p.unit}</span>`}</label>`;
+}
+function ParamPanel(p){
+ var i=p.inputs,open=p.open;
+ var changed=PARAM_DEFS.some(function(d){return Math.abs(i[d.key]-DEFAULTS[d.key])>1e-9});
+ return html`<section className="card mt-5" aria-label="Parameter control panel">
+  <div className="flex flex-wrap items-center justify-between gap-3 p-5">
+   <div className="flex items-center gap-3"><div className="ico-box" style=${{color:'var(--em)'}}><${Icon} name="sliders" size=${18}/></div>
+    <div><h2 className="hd text-[19px]">Parameter control panel</h2><p className="muted text-[13.5px]">Change any input and every metric recalculates live.</p></div></div>
+   <div className="flex flex-wrap gap-2">
+    <button className="btn" disabled=${!changed} onClick=${p.reset}><${Icon} name="reset" size=${16}/> Reset to defaults</button>
+    <button className="btn" aria-expanded=${open} aria-controls="param-body" onClick=${p.toggle}>${open?'Hide inputs':'Show inputs'} <${Icon} name="chevron" size=${16} className=${open?'rot':''}/></button>
+   </div>
+  </div>
+  ${open&&html`<div id="param-body" className="px-5 pb-5 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+   ${PARAM_DEFS.map(function(d){
+    var v=i[d.key],isDef=Math.abs(v-DEFAULTS[d.key])<1e-9;
+    var fm=function(x){return d.prefix+x.toFixed(d.dp)};
+    return html`<div key=${d.key} style=${{background:'var(--surface2)',border:'1px solid '+(isDef?'var(--line)':'var(--em)'),borderRadius:12,padding:14}}>
+     <div className="flex items-start justify-between gap-2">
+      <div className="font-semibold text-[14px] leading-snug">${d.label}<span className="block muted text-[12.5px] font-normal mt-0.5">${Sym(d.sym[0],d.sym[1])}</span></div>
+      <${NumInput} id=${'n-'+d.key} label=${d.label} value=${v} min=${d.min} max=${d.max} step=${d.step} dp=${d.dp} prefix=${d.prefix} unit=${d.unit} onCommit=${function(n){p.set(d.key,n)}}/>
+     </div>
+     <input type="range" className="mt-3" aria-label=${d.label+' slider'} min=${d.min} max=${d.max} step=${d.step} value=${v} onChange=${function(e){p.set(d.key,parseFloat(e.target.value))}}/>
+     <div className="flex justify-between muted text-[12px]"><span>${fm(d.min)}</span><span>${isDef?'Default':'Default '+fm(DEFAULTS[d.key])}</span><span>${fm(d.max)}</span></div>
+    </div>`})}
+  </div>`}
+ </section>`;
+}
+
+/* ---------- formula readout (financial view) ---------- */
+function FormulaCard(p){
+ var i=p.inputs,f=p.fin,e0=function(v){return eur(v,0)},e2=function(v){return eur(v,2)};
+ var num=function(v,dp){return v.toLocaleString('en-US',{minimumFractionDigits:dp,maximumFractionDigits:dp})};
+ var rows=[
+  {name:'Monthly volume',f:html`<span>${Sym('V','monthly')} = ${Sym('V','daily')} × 30</span>`,calc:num(i.vDaily,1)+' × 30',res:num(f.Vm,1)+' m³/month'},
+  {name:'Gross monthly savings',f:html`<span>${Sym('S','gross')} = ${Sym('V','monthly')} × ${Sym('P','water')}</span>`,calc:num(f.Vm,1)+' × '+e2(i.price),res:e2(f.Sg)+' /month'},
+  {name:'Net monthly savings',f:html`<span>${Sym('S','net')} = ${Sym('S','gross')} − ${Sym('C','opex')}</span>`,calc:e2(f.Sg)+' − '+e0(i.opex),res:e2(f.Sn)+' /month',bad:f.Sn<=0},
+  {name:'Annual net savings',f:html`<span>${Sym('S','annual')} = ${Sym('S','net')} × 12</span>`,calc:e2(f.Sn)+' × 12',res:e0(f.Sa)+' /year',bad:f.Sa<=0},
+  {name:'Payback period',f:html`<span>${Sym('T','payback')} = ${Sym('C','capex')} / ${Sym('S','net')}</span>`,calc:e0(i.capex)+' / '+e2(f.Sn),res:isFinite(f.T)?num(f.T,1)+' months':'Never (S_net ≤ 0)',bad:!isFinite(f.T)},
+  {name:'3-year ROI',f:html`<span>${Sym('ROI','3yr')} = (${Sym('S','annual')} × 3 − ${Sym('C','capex')}) / ${Sym('C','capex')}</span>`,calc:'('+e0(f.Sa)+' × 3 − '+e0(i.capex)+') / '+e0(i.capex),res:(f.roi>=0?'+':'')+num(f.roi,1)+'%',bad:f.roi<0}
+ ];
+ return html`<section className="card p-5">
+  <h2 className="hd text-[19px]">Calculation engine</h2>
+  <p className="muted text-[13.5px]">Live formulas with your current inputs substituted.</p>
+  <div className="mt-2">${rows.map(function(r){return html`<div key=${r.name} className="py-3" style=${{borderBottom:'1px solid var(--line)'}}>
+   <div className="flex items-baseline justify-between gap-3"><span className="font-semibold text-[14.5px]">${r.name}</span><span className=${'num '+(r.bad?'c-rd':'')} style=${{fontSize:19}}><${Flash} v=${r.res}>${r.res}<//></span></div>
+   <div className="text-[13.5px] muted mt-0.5">${r.f}</div>
+   <div className="text-[13px] muted">${r.calc}</div>
+  </div>`})}</div>
+ </section>`;
+}
+
+/* ---------- cash-flow chart (all inputs are live) ---------- */
+function CashFlow(p){
+ var ref=useRef(null),w=useWidth(ref),hs=useState(null),hm=hs[0],setHm=hs[1];
+ var H=300,pl=58,pr=16,pt=18,pb=30,capex=p.capex,opex=p.opex,sv=p.gross,T=p.T;
+ var M=isFinite(T)?clamp(Math.ceil(T*1.6/6)*6,12,36):36;
+ var cost=function(m){return capex+opex*m},sav=function(m){return sv*m};
+ var top=Math.max(cost(M),sav(M)),stepY=top>6000?2000:top>3000?1000:500;
+ var yMax=Math.max(1000,Math.ceil(top*1.06/stepY)*stepY);
+ var X=function(m){return pl+m/M*(w-pl-pr)},Y=function(v){return pt+(1-v/yMax)*(H-pt-pb)};
+ var bIn=isFinite(T)&&T<=M;
+ var ticks=[];for(var v=0;v<=yMax;v+=stepY)ticks.push(v);
+ var maxL=w<540?7:13,stepX=[1,2,3,4,6,12].filter(function(s){return M/s<=maxL-1})[0]||12,xs=[];for(var m=0;m<=M;m+=stepX)xs.push(m);
+ var onMove=function(e){var r=e.currentTarget.getBoundingClientRect();var px=(e.clientX-r.left)/r.width*w;setHm(clamp((px-pl)/(w-pl-pr)*M,0,M))};
+ var pts=function(a){return a.map(function(q){return X(q[0]).toFixed(1)+','+Y(q[1]).toFixed(1)}).join(' ')};
+ var defEnd=bIn?T:M;
+ var deficit=pts([[0,cost(0)],[defEnd,cost(defEnd)],[0,sav(0)]]);
+ var profit=bIn?pts([[T,cost(T)],[M,cost(M)],[M,sav(M)]]):null;
+ var hv=hm,near=bIn&&X(T)<pl+170,tg=CONFIG.targetPaybackMonths;
+ return html`<section className="card p-5">
+  <div className="flex flex-wrap items-start justify-between gap-2">
+   <div><h2 className="hd text-[19px]">Cumulative cash flow and CAPEX recovery</h2>
+    <p className="muted text-[13.5px]">Months since installation. Redraws whenever an input changes.</p></div>
+   <div className="flex flex-wrap gap-4 text-[13px]"><span className="flex items-center gap-2"><i style=${{width:18,height:3,background:'var(--em)',borderRadius:2,display:'inline-block'}}></i> Cumulative savings</span><span className="flex items-center gap-2"><i style=${{width:18,height:3,background:'var(--am)',borderRadius:2,display:'inline-block'}}></i> CAPEX + OPEX</span></div>
+  </div>
+  <div ref=${ref} className="mt-3">
+   <svg width=${w} height=${H} style=${{display:'block',touchAction:'pan-y'}} role="img" aria-label=${bIn?'Cash flow chart. Break-even at month '+T.toFixed(1):'Cash flow chart. Break-even is not reached in the plotted period.'}>
+    ${ticks.map(function(t){return html`<g key=${t}><line x1=${pl} x2=${w-pr} y1=${Y(t)} y2=${Y(t)} className="st-line" strokeWidth="1"/><text className="t-mut" x=${pl-8} y=${Y(t)+4} textAnchor="end">${eur(t)}</text></g>`})}
+    ${xs.map(function(m){return html`<text key=${m} className="t-mut" x=${X(m)} y=${H-8} textAnchor="middle">${m}</text>`})}
+    <polygon points=${deficit} style=${{fill:'var(--am-soft)'}}/>
+    ${profit&&html`<polygon points=${profit} style=${{fill:'var(--em-soft)'}}/>`}
+    ${tg<=M&&html`<g><line x1=${X(tg)} x2=${X(tg)} y1=${pt} y2=${H-pb} strokeDasharray="5 4" strokeWidth="1.5" style=${{stroke:'var(--sl)'}}/>
+     <text className="t-mut halo" x=${X(tg)+6} y=${pt+10} style=${{fill:'var(--sl)'}}>Target: month ${tg.toFixed(1)}</text></g>`}
+    <line x1=${X(0)} y1=${Y(cost(0))} x2=${X(M)} y2=${Y(cost(M))} strokeWidth="3" strokeLinecap="round" style=${{stroke:'var(--am)'}}/>
+    <line x1=${X(0)} y1=${Y(0)} x2=${X(M)} y2=${Y(sav(M))} strokeWidth="3" strokeLinecap="round" style=${{stroke:'var(--em)'}}/>
+    ${bIn&&html`<g><circle cx=${X(T)} cy=${Y(sav(T))} r="7" style=${{fill:'var(--surface)',stroke:'var(--em)',strokeWidth:3.5}}/>
+     <text className="t-ink halo" x=${near?X(T)+12:X(T)-12} y=${near?Y(sav(T))+24:Y(sav(T))-14} textAnchor=${near?'start':'end'}>Break-even: month ${T.toFixed(1)}</text></g>`}
+    ${hv!=null&&html`<g><line x1=${X(hv)} x2=${X(hv)} y1=${pt} y2=${H-pb} strokeWidth="1.5" style=${{stroke:'var(--muted)'}}/><circle cx=${X(hv)} cy=${Y(sav(hv))} r="4.5" style=${{fill:'var(--em)'}}/><circle cx=${X(hv)} cy=${Y(cost(hv))} r="4.5" style=${{fill:'var(--am)'}}/></g>`}
+    <rect x=${pl} y="0" width=${w-pl-pr} height=${H} fill="transparent" onPointerMove=${onMove} onPointerDown=${onMove} onPointerLeave=${function(){setHm(null)}}/>
+   </svg>
+  </div>
+  <div className="mt-2 rounded-xl px-4 py-3 text-[14px]" style=${{background:'var(--surface2)',border:'1px solid var(--line)',minHeight:52}} aria-live="polite">
+   ${hv!=null?html`<span><b>Month ${hv.toFixed(1)}</b>: savings ${eur(sav(hv))}, costs ${eur(cost(hv))}, net position <b className=${sav(hv)-cost(hv)>=0?'c-em':'c-am'}>${(sav(hv)-cost(hv)>=0?'+':'-')+eur(Math.abs(sav(hv)-cost(hv)))}</b></span>`:
+    !isFinite(T)?html`<span className="c-rd">Gross savings of ${eur(sv,2)} a month do not cover OPEX of ${eur(opex)}, so CAPEX is never recovered.</span>`:
+    html`<span>Break-even at month <b>${T.toFixed(1)}</b>. After that the system earns about <b className="c-em">${eur(sv-opex,2)}</b> a month net.</span>`}
+  </div>
+ </section>`;
+}
+
+/* ---------- live WQI calculation ---------- */
+function WqiEngine(p){
+ var wq=p.wq,d=p.d,lv=p.live,f1=function(v){return v.toFixed(1)};
+ var wqi=useTween(wq.wqi);
+ var Row=function(a,b,c,tone){return html`<div className="row" style=${{alignItems:'flex-start'}}>
+  <div className="flex-1 min-w-0"><div className="font-semibold text-[14.5px] leading-tight">${a}</div><div className="muted text-[13px]">${b}</div></div>
+  <div className=${'num '+(tone||'')} style=${{fontSize:18,whiteSpace:'nowrap'}}>${c}</div></div>`};
+ return html`<section className="card p-5">
+  <div className="flex flex-wrap items-center justify-between gap-2">
+   <div><h2 className="hd text-[19px]">Water quality index engine</h2><p className="muted text-[13.5px]">Recalculated from the live pH and turbidity readings.</p></div>
+   <span className=${'pill '+d.statusTone}>${d.status}</span>
+  </div>
+  <div className="mt-3">
+   ${Row('Base WQI','Starting score','100.0')}
+   ${Row('pH penalty',wq.inRange?'pH '+wq.ph.toFixed(2)+' is inside 6.5 to 8.5, no penalty':'|'+wq.ph.toFixed(2)+' − 7.5| × 30 (pH outside 6.5 to 8.5)','−'+f1(wq.pPh),wq.pPh>0?'c-rd':'')}
+   ${Row('Turbidity penalty',(wq.ntu<=CONFIG.ntuLimit?wq.ntu.toFixed(1)+' NTU is at or below 5.0, no penalty':'('+wq.ntu.toFixed(1)+' − 5.0) × 12')+(d.fallback?'. Raw reading '+lv.ntu.toFixed(1)+' NTU ignored: sensor flagged, using last good value.':d.calib?'. Sensor flagged but the controller uses the raw value.':''),'−'+f1(wq.pNtu),wq.pNtu>0?'c-rd':'')}
+   ${Row('TDS',Math.round(lv.tds)+' mg/L, logged only. The WQI formula has no TDS term.','not scored','muted')}
+   <div className="row" style=${{alignItems:'flex-start'}}>
+    <div className="flex-1"><div className="font-semibold text-[14.5px]">WQI = max(0, 100 − ${f1(wq.pPh)} − ${f1(wq.pNtu)})</div>
+     <div className="bar mt-2" style=${{position:'relative',overflow:'visible'}}><i style=${{width:wqi+'%',background:d.safe?'var(--em)':'var(--rd)'}}></i><span style=${{position:'absolute',left:CONFIG.wqiSafeMin+'%',top:-4,bottom:-4,width:2,background:'var(--ink)',opacity:.6}}></span></div>
+     <div className="muted text-[12.5px] mt-1" style=${{paddingLeft:CONFIG.wqiSafeMin+'%',marginLeft:'-2ch'}}>${CONFIG.wqiSafeMin} threshold</div></div>
+    <div className=${'num '+(d.safe?'c-em':'c-rd')} style=${{fontSize:30}}>${wqi.toFixed(1)}</div>
+   </div>
+  </div>
+  <div className="mt-3 text-[14px] rounded-xl px-4 py-3" style=${{background:d.safe?'var(--em-soft)':'var(--rd-soft)'}}>
+   ${d.safe?html`<span><b>WQI ≥ ${CONFIG.wqiSafeMin}:</b> solenoid valve OPEN, recycling active.</span>`:
+    d.blocked?html`<span><b>WQI &lt; ${CONFIG.wqiSafeMin}:</b> solenoid valve on BYPASS TO SEWER. Financial risk avoided: <b>${eur(d.riskAvoided)}</b>.</span>`:
+    html`<span><b>WQI &lt; ${CONFIG.wqiSafeMin}:</b> the bypass safeguard is off, so the valve stays open. Financial exposure: <b>${eur(d.riskExposed)}</b>.</span>`}
+  </div>
+ </section>`;
+}
+
+/* ---------- banners driven by live state ---------- */
+function Banners(p){
+ var d=p.d,wq=p.wq,st=p.st,lv=p.live,items=[];
+ if(!d.safe)items.push({k:'wqi',tone:'rd',icon:'alert',title:'ALERT / WATER CONTAMINATED',
+  msg:'WQI '+wq.wqi.toFixed(1)+' is below '+CONFIG.wqiSafeMin+' (pH '+wq.ph.toFixed(2)+', turbidity '+wq.ntu.toFixed(1)+' NTU). '+(d.blocked?'Solenoid valve is on BYPASS TO SEWER. Financial risk avoided: '+eur(d.riskAvoided)+'.':'Bypass safeguard is off, so contaminated water is reaching storage. Exposure: '+eur(d.riskExposed)+'.')});
+ if(d.calib)items.push({k:'cal',tone:'am',icon:'wrench',title:'CALIBRATION MODE',
+  msg:'NTU sensor #2 error flag is raised (raw reading '+lv.ntu.toFixed(1)+' NTU, unreliable). '+(d.fallback?'The controller is holding the last good reading of '+lv.g.toFixed(1)+' NTU and auto filter replacement is paused. Recalibrate the sensor to clear the flag.':'Safeguard off: the controller is trusting the faulty reading.')});
+ if(st.sim.rain)items.push({k:'rain',tone:'sl',icon:'cloud-rain',title:'Rain forecast: 85% probability',
+  msg:st.protect.weather?'Irrigation pump is disabled. Saved OPEX today: +'+eur(st.tally.opexSaved,2)+'.':'Safeguard off: the pump is still scheduled to run.'});
+ if(!items.length)return null;
+ return html`<div className="flex flex-col gap-3 mt-5">${items.map(function(b){return html`<div key=${b.k} role=${b.tone==='rd'?'alert':'status'} className="flex gap-3 p-4 rounded-xl" style=${{background:'var(--'+b.tone+'-soft)',border:'1px solid var(--'+b.tone+')'}}>
+  <span style=${{color:'var(--'+b.tone+')',flex:'none',marginTop:1}}><${Icon} name=${b.icon} size=${20}/></span>
+  <div className="text-[14px]"><div className="font-semibold" style=${{color:'var(--'+b.tone+')'}}>${b.title}</div><div>${b.msg}</div></div></div>`})}</div>`;
+}
+
+function Switch(p){
+ return html`<button type="button" role="switch" aria-checked=${p.on} aria-label=${p.label} className="switch" onClick=${p.onClick}></button>`;
+}
+function RiskTable(p){
+ var st=p.st,dispatch=p.dispatch;
+ var prot=0,exp=0;
+ RISKS.forEach(function(r){if(st.protect[r.id])prot+=r.value;else exp+=r.value});
+ return html`<section className="card p-5">
+  <div className="flex flex-wrap items-start justify-between gap-3">
+   <div><h2 className="hd text-[19px]">Financial risk breakdown</h2><p className="muted text-[13.5px]">Switch a safeguard off to see the exposure it was covering.</p></div>
+   <div className="flex gap-2 flex-wrap"><span className="pill em">Protected ${eur(prot)}</span><span className=${'pill '+(exp>0?'rd':'mut')}>At risk ${eur(exp)}</span></div>
+  </div>
+  <div className="scroll-x mt-3"><table className="tbl">
+   <thead><tr><th>AI safeguard</th><th>Risk</th><th>Mitigated value</th><th>This session</th><th>Safeguard</th></tr></thead>
+   <tbody>
+   ${RISKS.map(function(r){
+    var on=st.protect[r.id],c=st.counts[r.id];
+    return html`<tr key=${r.id}>
+     <td className="font-semibold">${r.name}</td>
+     <td className="muted">${r.risk}</td>
+     <td><span className=${'num '+(on?'c-em':'muted')} style=${{fontSize:19,textDecoration:on?'none':'line-through'}}>${eur(r.value)}</span><span className="muted text-[13px]">${r.per}</span></td>
+     <td>${c.caught+c.missed===0?html`<span className="muted">No events</span>`:html`<span>${c.caught>0&&html`<span className="pill em">${c.caught} caught</span>`} ${c.missed>0&&html`<span className="pill rd">${c.missed} missed</span>`}</span>`}</td>
+     <td><div className="flex items-center gap-2"><${Switch} on=${on} label=${'AI safeguard: '+r.name} onClick=${function(){dispatch({type:'protect',id:r.id})}}/><span className=${'text-[13.5px] font-semibold '+(on?'c-em':'c-rd')}>${on?'On':'Off'}</span></div></td>
+    </tr>`})}
+   </tbody></table></div>
+  <p className="muted text-[13px] mt-3">Avoided losses are shown separately and are not counted in the payback calculation.</p>
+ </section>`;
+}
+
+/* ---------- shell ---------- */
+function Toast(p){
+ var t=p.t;
+ useEffect(function(){var id=setTimeout(function(){p.onClose(t.id)},9000);return function(){clearTimeout(id)}},[]);
+ return html`<div className=${'toast '+t.tone} role="status">
+  <div className=${'scn-ico '+(t.tone==='em'?'':t.tone)} style=${{flex:'none',width:32,height:32,color:'var(--'+t.tone+')',background:'var(--'+t.tone+'-soft)'}}><${Icon} name=${t.tone==='rd'?'alert':t.tone==='sl'?'cloud-rain':'info'} size=${18}/></div>
+  <div className="flex-1 text-[14px]"><div className="font-semibold">${t.title}</div><div className="muted" style=${{color:'var(--ink)'}}>${t.msg}</div></div>
+  <button aria-label="Dismiss notification" onClick=${function(){p.onClose(t.id)}} style=${{background:'none',border:0,color:'var(--muted)',cursor:'pointer',alignSelf:'flex-start'}}><${Icon} name="x" size=${16}/></button>
+ </div>`;
+}
+var VIEWS=[
+ {id:'ops',icon:'activity',label:'Operational view',sub:'For facility technicians',title:'Operations',desc:'Live status of the greywater treatment loop and its sensors.'},
+ {id:'fin',icon:'trend',label:'Financial and risk view',sub:'For school management and investors',title:'Financial and risk',desc:'Payback, running costs and the losses the AI is preventing.'}
+];
+function ThemeBtn(p){
+ return html`<button className="btn" onClick=${p.toggle} aria-label=${p.dark?'Switch to light mode':'Switch to dark mode'}><${Icon} name=${p.dark?'sun':'moon'} size=${16}/>${p.wide&&(p.dark?'Light mode':'Dark mode')}</button>`;
+}
+function App(){
+ var vs=useState('ops'),view=vs[0],setView=vs[1];
+ var ds=useState(function(){try{var s=localStorage.getItem('eco-theme');if(s)return s==='dark'}catch(e){}return !!(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)}),dark=ds[0],setDark=ds[1];
+ var rs=useReducer(reducer,INIT),st=rs[0],dispatch=rs[1];
+ var is=useState(DEFAULTS),inputs=is[0],setInputs=is[1];
+ var os=useState(function(){return window.innerWidth>=1024}),panelOpen=os[0],setPanelOpen=os[1];
+ var setIn=function(key,val){setInputs(function(o){var n=Object.assign({},o);n[key]=val;return n})};
+
+ var fin=useFinance(inputs);                               // formulas 1 to 6
+
+ useEffect(function(){document.documentElement.classList.toggle('dark',dark);try{localStorage.setItem('eco-theme',dark?'dark':'light')}catch(e){}},[dark]);
+
+ var vh=useRef(new Date().getHours()+new Date().getMinutes()/60);
+ var ss=useState(function(){return makeHistory(vh.current-24)}),series=ss[0],setSeries=ss[1];
+ var simRef=useRef(st.sim),protRef=useRef(st.protect);simRef.current=st.sim;protRef.current=st.protect;
+ var tick=function(){setSeries(function(prev){vh.current+=.25;return prev.slice(1).concat([nextPoint(prev[prev.length-1],vh.current,simRef.current,protRef.current)])})};
+ useEffect(function(){var id=setInterval(tick,2500);return function(){clearInterval(id)}},[]);
+ var first=useRef(true);
+ useEffect(function(){if(first.current){first.current=false;return}tick()},[st.sim.ph,st.sim.drift,st.protect.bypass,st.protect.drift]);
+ var live=series[series.length-1];
+
+ var ntuUsed=st.sim.drift&&st.protect.drift?live.g:live.ntu;   // fallback value while the NTU flag is raised
+ var wq=useWqi(live.ph,ntuUsed);                              // WQI engine
+ var d=derive(st.sim,st.protect,wq,live);                     // valve, status, banners
+
+ var cur=VIEWS.filter(function(v){return v.id===view})[0];
+ var nav=VIEWS.map(function(v){return html`<button key=${v.id} className="nav-btn" aria-current=${view===v.id?'page':undefined} onClick=${function(){setView(v.id)}}>
+   <span className="nav-ico" style=${{marginTop:2}}><${Icon} name=${v.icon} size=${19}/></span><span><span className="block font-semibold text-[14.5px]" style=${{color:'var(--ink)'}}>${v.label}</span><span className="block text-[13px]">${v.sub}</span></span></button>`});
+ var modeBox=html`<div style=${{background:'var(--surface2)',border:'1px solid var(--line)',borderRadius:12,padding:12}}>
+   <div className="flex items-center gap-2 text-[13px] muted"><span className="dot"></span> AI controller online</div>
+   <div className=${'mt-2 pill '+d.mode[1]}>${d.mode[0]}</div>
+   <div className="mt-2 text-[13px] muted">WQI ${wq.wqi.toFixed(1)} · valve ${d.valve}</div></div>`;
+ var sim=html`<${Simulator} st=${st} dispatch=${dispatch} live=${live} ntuUsed=${ntuUsed}/>`;
+
+ return html`<div className="lg:pl-[272px]">
+  <aside className="hidden lg:flex flex-col fixed inset-y-0 left-0 w-[272px] p-5 gap-6" style=${{background:'var(--surface)',borderRight:'1px solid var(--line)',top:'env(safe-area-inset-top,0px)'}}>
+   <div className="flex items-center gap-3">
+    <div style=${{width:40,height:40,borderRadius:12,background:'var(--em)',color:'#fff',display:'grid',placeItems:'center'}}><${Icon} name="droplet" size=${22} sw=${2}/></div>
+    <div><div className="hd text-[18px] leading-tight">EcoSchool Water AI</div><div className="muted text-[13px]">Kindergarten greywater loop</div></div>
+   </div>
+   <nav aria-label="Dashboard views" className="flex flex-col gap-2">${nav}</nav>
+   <div className="mt-auto flex flex-col gap-3">${modeBox}<${ThemeBtn} dark=${dark} wide=${true} toggle=${function(){setDark(!dark)}}/></div>
+  </aside>
+
+  <header className="lg:hidden sticky top-0 z-30 px-4 pt-3 pb-3" style=${{background:'var(--bg)',borderBottom:'1px solid var(--line)',top:'env(safe-area-inset-top,0px)'}}>
+   <div className="flex items-center justify-between gap-3">
+    <div className="flex items-center gap-2"><div style=${{width:32,height:32,borderRadius:10,background:'var(--em)',color:'#fff',display:'grid',placeItems:'center'}}><${Icon} name="droplet" size=${18} sw=${2}/></div><span className="hd text-[17px]">EcoSchool Water AI</span></div>
+    <${ThemeBtn} dark=${dark} toggle=${function(){setDark(!dark)}}/>
+   </div>
+   <div className="seg mt-3" role="group" aria-label="Dashboard views">${VIEWS.map(function(v){return html`<button key=${v.id} aria-current=${view===v.id?'page':undefined} onClick=${function(){setView(v.id)}}>${v.id==='ops'?'Operational':'Financial and risk'}</button>`})}</div>
+  </header>
+
+  <main className="px-4 sm:px-6 lg:px-8 py-6 mx-auto" style=${{maxWidth:1440}}>
+   <div className="flex flex-wrap items-end justify-between gap-3">
+    <div><h1 className="hd" style=${{fontSize:32,lineHeight:1.1}}>${cur.title}</h1><p className="muted mt-1">${cur.desc}</p></div>
+    <div className="flex items-center gap-2"><span className="pill mut">Simulated data</span><span className="pill em"><span className="dot"></span> Live</span></div>
+   </div>
+   <${Banners} d=${d} wq=${wq} st=${st} live=${live}/>
+   <${ParamPanel} inputs=${inputs} set=${setIn} open=${panelOpen} toggle=${function(){setPanelOpen(!panelOpen)}} reset=${function(){setInputs(DEFAULTS)}}/>
+   <${Kpis} d=${d} fin=${fin} wq=${wq} st=${st} inputs=${inputs}/>
+   ${view==='ops'?html`<div className="grid grid-cols-1 xl:grid-cols-12 gap-5 mt-5">
+     <section className="card p-5 xl:col-span-8">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+       <h2 className="hd text-[19px]">Treatment loop</h2>
+       <span className=${'pill '+d.mode[1]}>${d.mode[0]}</span>
+      </div>
+      <div className="scroll-x mt-2"><${Schematic} d=${d} sim=${st.sim} live=${live}/></div>
+     </section>
+     <div className="xl:col-span-4">${sim}</div>
+     <div className="xl:col-span-8"><${WaterQuality} series=${series} sim=${st.sim} blocked=${d.blocked}/></div>
+     <div className="xl:col-span-4"><${Hardware} d=${d} live=${live} sim=${st.sim}/></div>
+     <div className="xl:col-span-8"><${WqiEngine} wq=${wq} d=${d} live=${live}/></div>
+     <div className="xl:col-span-4"><${Weather} d=${d}/></div>
+    </div>`:html`<div className="grid grid-cols-1 xl:grid-cols-12 gap-5 mt-5">
+     <div className="xl:col-span-8"><${CashFlow} capex=${inputs.capex} opex=${inputs.opex} gross=${fin.Sg} T=${fin.T}/></div>
+     <div className="xl:col-span-4"><${FormulaCard} inputs=${inputs} fin=${fin}/></div>
+     <div className="xl:col-span-8"><${RiskTable} st=${st} dispatch=${dispatch}/></div>
+     <div className="xl:col-span-4">${sim}</div>
+    </div>`}
+  </main>
+  <div className="toasts" aria-live="polite">${st.toasts.map(function(t){return html`<${Toast} key=${t.id} t=${t} onClose=${function(id){dispatch({type:'dismiss',id:id})}}/>`})}</div>
+ </div>`;
+}
+ReactDOM.createRoot(document.getElementById('root')).render(html`<${App}/>`);
+})();
+
+</script>
+</body>
+</html>
