@@ -189,7 +189,7 @@ function showWeather(temp,main,hum,demo){
   const advice=sunny||(!wet&&temp>28)?'High handwashing activity expected. Recycled greywater is prioritized for school garden drip irrigation.'
     :wet?'Rainwater available in storage. Reducing pump cycle to save energy (OPEX).'
     :'Mild weather: normal pump schedule.';
-  $('weather').innerHTML='<div class="font-bold">'+icon+' Nicosia · '+Math.round(temp)+'°C · 💧 '+hum+'%'+(demo?' <span class="text-xs font-normal">(demo data)</span>':'')+'</div><div class="text-xs mt-1">'+advice+'</div>';
+  $('weather').innerHTML='<div class="font-bold">'+icon+' Nicosia · '+Math.round(temp)+'°C · 💧 '+hum+'%'$('weather').innerHTML='<div class="font-bold">'+icon+' Nicosia · '+Math.round(temp)+'°C · 💧 '+hum+'%</div><div class="text-xs mt-1">'+advice+'</div>';)+'</div><div class="text-xs mt-1">'+advice+'</div>';
 }
 async function loadWeather(){
   try{
